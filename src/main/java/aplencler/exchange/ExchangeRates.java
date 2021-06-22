@@ -1,4 +1,4 @@
-package aplencler.exchange.transaction;
+package aplencler.exchange;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
@@ -9,9 +9,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 @Component
-class ExchangeRates {
+public class ExchangeRates {
 
-    LinkedHashMap<String, Double> findExchangeRates(String currencyCode) {
+    public LinkedHashMap<String, Double> findExchangeRates(String currencyCode) {
 
         LinkedHashMap<String, ArrayList<LinkedHashMap<String, Double>>> exchangeRatesMap;
         ObjectMapper mapper = new ObjectMapper();
