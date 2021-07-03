@@ -12,42 +12,37 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(value = "/transaction")
 class TransactionController {
 
-    private final ExchangeRates exchangeRates;
-    private final TransactionService service;
-    private double amountValidated;
-    private String currencyCodeValidated;
+    private ExchangeRates exchangeRates;
+    private TransactionService service;
 
     TransactionController(ExchangeRates exchangeRates, TransactionService service) {
         this.exchangeRates = exchangeRates;
         this.service = service;
+
     }
 
     @GetMapping(value = "ask", params = {"amount", "code"})
-    ResponseEntity<String> responseToAsk(@RequestParam("amount") String amount, @RequestParam("code") String currencyCode) {
-        ResponseEntity<String> responseEntity;
-        currencyCode = currencyCode.toUpperCase();
-        try {
-            amountValidated = Double.parseDouble(amount.replace(",", "."));
+    ResponseEntity<Double> responseToAsk(@RequestParam("amount") String amount, @RequestParam("code") String currencyCode) {
+        double amountValidated = validateAmount(amount);
+        String currencyCodeValidated = validateCurrencyCode(currencyCode);
+        String bidOrAsk = "ask";
 
-        } catch (NumberFormatException e) {
-            amountValidated = 0.00;
-        }
+        return responseEntity(currencyCodeValidated, bidOrAsk, amountValidated);
 
-        if (currencyCode.equals("EUR") | currencyCode.equals("USD") | currencyCode.equals("GBP") && amountValidated > 0.00) {
-
-            currencyCodeValidated = currencyCode;
-            responseEntity = ResponseEntity.status(HttpStatus.OK).body("Kupujesz " + amountValidated + currencyCodeValidated + ", potrzebujesz " + service.countValue(amountValidated, "ask", exchangeRates.findExchangeRates(currencyCodeValidated)) + "PLN");
-        } else {
-            responseEntity = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Błędne dane wejściowe");
-        }
-        return responseEntity;
     }
 
 
     @GetMapping(value = "bid", params = {"amount", "code"})
-    ResponseEntity<String> responseToBid(@RequestParam("amount") String amount, @RequestParam("code") String currencyCode) {
-        ResponseEntity<String> responseEntity;
-        currencyCode = currencyCode.toUpperCase();
+    ResponseEntity<Double> responseToBid(@RequestParam("amount") String amount, @RequestParam("code") String currencyCode) {
+        double amountValidated = validateAmount(amount);
+        String currencyCodeValidated = validateCurrencyCode(currencyCode);
+        String bidOrAsk = "bid";
+
+        return responseEntity(currencyCodeValidated, bidOrAsk, amountValidated);
+    }
+
+    double validateAmount(String amount) {
+        double amountValidated;
         try {
             amountValidated = Double.parseDouble(amount.replace(",", "."));
 
@@ -55,23 +50,24 @@ class TransactionController {
             amountValidated = 0.00;
         }
 
-        if (currencyCode.equals("EUR") | currencyCode.equals("USD") | currencyCode.equals("GBP") && amountValidated > 0.00) {
+        return amountValidated;
+    }
 
-            currencyCodeValidated = currencyCode;
-            responseEntity = ResponseEntity.status(HttpStatus.OK).body("Sprzedajesz " + amountValidated + currencyCodeValidated + ", otrzymujesz " + service.countValue(amountValidated, "bid", exchangeRates.findExchangeRates(currencyCodeValidated)) + "PLN");
+    String validateCurrencyCode(String currencyCode) {
+
+        String currencyCodeValidated = currencyCode.toUpperCase();
+
+
+        return currencyCodeValidated;
+    }
+
+    ResponseEntity<Double> responseEntity(String currencyCodeValidated, String bidOrAsk, double amountValidated) {
+        ResponseEntity<Double> responseEntity;
+        if (currencyCodeValidated.equals("EUR") || currencyCodeValidated.equals("USD") || currencyCodeValidated.equals("GBP") && amountValidated > 0.00) {
+            responseEntity = ResponseEntity.status(HttpStatus.OK).body(service.countValue(amountValidated, bidOrAsk, exchangeRates.findExchangeRates(currencyCodeValidated)));
         } else {
-            responseEntity = ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Błędne dane wejściowe");
+            responseEntity = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(0.00);
         }
         return responseEntity;
-    }
-
-    @GetMapping(value = "ask")
-    ResponseEntity<String> responseToAsk() {
-        return ResponseEntity.status(HttpStatus.OK).body("Podaj ilość i rodzaj waluty");
-    }
-
-    @GetMapping(value = "bid")
-    ResponseEntity<String> responseToBid() {
-        return ResponseEntity.status(HttpStatus.OK).body("Podaj ilość i rodzaj waluty");
     }
 }
