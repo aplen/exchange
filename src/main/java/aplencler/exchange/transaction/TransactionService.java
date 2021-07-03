@@ -2,7 +2,7 @@ package aplencler.exchange.transaction;
 
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 
 @Service
 public class TransactionService {
@@ -13,7 +13,7 @@ public class TransactionService {
      * @param exchangeRatesMap - mapa zawierająca aktualne kursy kupna/sprzedaży waluty
      * @return ilość PLN potrzebnych do zakupu danej waluty lub ilość PLN, jaką otrzymamy za posiadaną walutę z uwzględnieniem 2% prowizji
      */
-    public double countValue(double amount, String bidOrAsk, LinkedHashMap<String, Double> exchangeRatesMap) {
+    public double countValue(double amount, String bidOrAsk, HashMap<String, Double> exchangeRatesMap) {
 
         double commissionAmount = exchangeRatesMap.get(bidOrAsk) * 0.02;
         double exchangeRate;
